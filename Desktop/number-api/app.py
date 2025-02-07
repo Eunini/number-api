@@ -52,7 +52,7 @@ def classify_number():
         "is_perfect": is_perfect(int(number)) if number.is_integer() and number > 0 else False,
         "properties": properties,
         "digit_sum": sum(int(digit) for digit in str(abs(int(number)))),
-        "fun_fact": get_fun_fact(int(number))
+        "fun_fact": get_fun_fact(int(number)) if number.is_integer() else get_fun_fact(number)
     }
     return jsonify(response), 200
 
