@@ -1,0 +1,5 @@
+# Ignore configuration and system files
+*.config
+*.gitconfig
+*.lesshst
+*.android
