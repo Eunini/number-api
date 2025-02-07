@@ -1,60 +1,84 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS  # Handles Cross-Origin Requests
+from fastapi import FastAPI, Query
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 import requests
+import math as Math
 
-def is_prime(n):
-    if n < 2:
+app = FastAPI()
+
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+def is_prime(num: int) -> bool:
+    """Check if a number is prime."""
+    if num < 2:
         return False
-    for i in range(2, int(n ** 0.5) + 1):
-        if n % i == 0:
+    for i in range(2, int(Math.sqrt(num)) + 1):
+        if num % i == 0:
             return False
     return True
 
-def is_perfect(n):
-    return sum(i for i in range(1, abs(n)) if n % i == 0) == abs(n)  # Handle negative numbers correctly
+def is_perfect(num: int) -> bool:
+    """Check if a number is a perfect number."""
+    if num < 1:  # Negative numbers cannot be perfect numbers
+        return False
+    return num == sum(i for i in range(1, num) if num % i == 0)
 
-def is_armstrong(n):
-    num_str = str(abs(n))  # Use absolute value for digit calculations
-    return sum(int(digit) ** len(num_str) for digit in num_str) == abs(n)
+def is_armstrong(num: int) -> bool:
+    """Check if a number is an Armstrong number."""
+    if num < 0:
+        return False  # Negative numbers cannot be Armstrong numbers
+    digits = [int(digit) for digit in str(num)]
+    power = len(digits)
+    return num == sum(d ** power for d in digits)
 
-def get_fun_fact(n):
+@app.get("/api/classify-number")
+async def classify(number: str):
+    # Check for invalid numbers
     try:
-        response = requests.get(f"http://numbersapi.com/{n}/math?json=true")
-        return response.json().get("text", "No fun fact available.")
-    except:
-        return "No fun fact available."
+        number = int(number)
+    except ValueError:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "number": "alphabet",
+                "error": True
+            }
+        )
 
-app = Flask(__name__)
-CORS(app)  # Enable CORS
+    prime_check = is_prime(number)
+    perfect_check = is_perfect(number)
+    armstrong_check = is_armstrong(number)
+    is_even = "even" if number % 2 == 0 else "odd"
 
-@app.route('/api/classify-number', methods=['GET'])
-def classify_number():
-    number_str = request.args.get('number')
-
+    # Fetch fun fact only if the number is valid
+    fun_fact = "No fun fact available."
     try:
-        # Allow both integers and floats
-        number = float(number_str)
-    except (TypeError, ValueError):
-        return jsonify({"number": "alphabet", "error": True}), 400
+        response = requests.get(f"http://numbersapi.com/{number}/math")
+        if response.status_code == 200:
+                fun_fact = response.text
+    except requests.RequestException:
+        pass  # Handle failure gracefully
 
+    # Determine properties
     properties = []
-    
-    if number.is_integer():
-        number = int(number)  # Convert to integer for further checks
+    if armstrong_check:
+        properties.append("armstrong")
+    properties.append(is_even)
 
-        if is_armstrong(number):
-            properties.append("armstrong")
-        properties.append("odd" if number % 2 != 0 else "even")
-
-    response = {
+    response_data = {
         "number": number,
-        "is_prime": is_prime(int(number)) if number.is_integer() and number > 0 else False,
-        "is_perfect": is_perfect(int(number)) if number.is_integer() and number > 0 else False,
+        "is_prime": prime_check,
+        "is_perfect": perfect_check,
         "properties": properties,
-        "digit_sum": sum(int(digit) for digit in str(abs(int(number)))),
-        "fun_fact": get_fun_fact(int(number)) if number.is_integer() else get_fun_fact(number)
+        "digit_sum": sum(int(digit) for digit in str((number if number > 0 else -number))),
+        "fun_fact": fun_fact
     }
-    return jsonify(response), 200
 
-if __name__ == "__main__":
-    app.run(debug=True)
+    return JSONResponse(content=response_data)
