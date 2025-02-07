@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS  # Handles Cross-Origin Requests
 import requests
-
+import os
 def is_prime(n):
     if n < 2:
         return False
@@ -50,5 +50,7 @@ def classify_number():
     }
     return jsonify(response), 200
 
+import os
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+
