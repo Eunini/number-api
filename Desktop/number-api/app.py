@@ -11,10 +11,10 @@ def is_prime(n):
     return True
 
 def is_perfect(n):
-    return sum(i for i in range(1, abs(n)) if abs(n) % i == 0) == abs(n)
+    return sum(i for i in range(1, abs(n)) if n % i == 0) == abs(n)  # Handle negative numbers correctly
 
 def is_armstrong(n):
-    num_str = str(abs(n))  # Convert to positive for Armstrong check
+    num_str = str(abs(n))  # Use absolute value for digit calculations
     return sum(int(digit) ** len(num_str) for digit in num_str) == abs(n)
 
 def get_fun_fact(n):
@@ -39,21 +39,22 @@ def classify_number():
 
     properties = []
     
-    if number.is_integer():  # Only check properties for whole numbers
-        number = int(number)
+    if number.is_integer():
+        number = int(number)  # Convert to integer for further checks
+
         if is_armstrong(number):
             properties.append("armstrong")
         properties.append("odd" if number % 2 != 0 else "even")
 
     response = {
         "number": number,
-        "is_prime": is_prime(int(number)) if number.is_integer() else False,
-        "is_perfect": is_perfect(int(number)) if number.is_integer() else False,
+        "is_prime": is_prime(int(number)) if number.is_integer() and number > 0 else False,
+        "is_perfect": is_perfect(int(number)) if number.is_integer() and number > 0 else False,
         "properties": properties,
-        "digit_sum": sum(int(digit) for digit in str(abs(int(number))) if digit.isdigit()),
-        "fun_fact": get_fun_fact(number)
+        "digit_sum": sum(int(digit) for digit in str(abs(int(number)))),
+        "fun_fact": get_fun_fact(int(number))
     }
     return jsonify(response), 200
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
