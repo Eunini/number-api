@@ -35,7 +35,7 @@ def classify_number():
         # Allow both integers and floats
         number = float(number_str)
     except (TypeError, ValueError):
-        return jsonify({"number": number_str, "error": True}), 400
+        return jsonify({"number": "alphabet", "error": True}), 400
 
     properties = []
     
