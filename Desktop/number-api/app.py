@@ -1,12 +1,10 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 import requests
-import math as Math
 
 app = FastAPI()
 
-# Enable CORS
+# Enable CORS for all origins
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], 
@@ -15,70 +13,69 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Helper function to check if a number is prime
 def is_prime(num: int) -> bool:
-    """Check if a number is prime."""
     if num < 2:
         return False
-    for i in range(2, int(Math.sqrt(num)) + 1):
+    for i in range(2, int(num ** 0.5) + 1):
         if num % i == 0:
             return False
     return True
 
+# Helper function to check if a number is perfect
 def is_perfect(num: int) -> bool:
-    """Check if a number is a perfect number."""
-    if num < 1:  # Negative numbers cannot be perfect numbers
+    if num <= 0:
         return False
-    return num == sum(i for i in range(1, num) if num % i == 0)
+    divisors_sum = sum(i for i in range(1, num) if num % i == 0)
+    return divisors_sum == num
 
+# Helper function to check if a number is Armstrong
 def is_armstrong(num: int) -> bool:
-    """Check if a number is an Armstrong number."""
-    if num < 0:
-        return False  # Negative numbers cannot be Armstrong numbers
-    digits = [int(digit) for digit in str(num)]
-    power = len(digits)
-    return num == sum(d ** power for d in digits)
+    num_str = str(abs(num))  # Ensure positive number for calculation
+    power = len(num_str)
+    return num == sum(int(digit) ** power for digit in num_str)
 
+# Function to fetch a fun fact from the Numbers API
+def get_fun_fact(num: int) -> str:
+    try:
+        response = requests.get(f"http://numbersapi.com/{num}/math")
+        return response.text if response.status_code == 200 else "No fun fact available."
+    except requests.RequestException:
+        return "No fun fact available."
+
+# API endpoint to classify the number and get properties
 @app.get("/api/classify-number")
 async def classify(number: str):
-    # Check for invalid numbers
     try:
-        number = int(number)
+        # Convert string to integer
+        num = int(number)
     except ValueError:
-        return JSONResponse(
-            status_code=400,
-            content={
-                "number": "alphabet",
-                "error": True
-            }
-        )
+        raise HTTPException(status_code=400, detail="Invalid number format")
 
-    prime_check = is_prime(number)
-    perfect_check = is_perfect(number)
-    armstrong_check = is_armstrong(number)
-    is_even = "even" if number % 2 == 0 else "odd"
-
-    # Fetch fun fact only if the number is valid
-    fun_fact = "No fun fact available."
-    try:
-        response = requests.get(f"http://numbersapi.com/{number}/math")
-        if response.status_code == 200:
-                fun_fact = response.text
-    except requests.RequestException:
-        pass  # Handle failure gracefully
-
-    # Determine properties
+    # Initialize properties
     properties = []
-    if armstrong_check:
+    is_even = "even" if num % 2 == 0 else "odd"
+
+    # Check if the number is prime, perfect, and Armstrong
+    prime = is_prime(num)
+    perfect = is_perfect(num)
+    armstrong = is_armstrong(num)
+
+    if armstrong:
         properties.append("armstrong")
     properties.append(is_even)
 
-    response_data = {
-        "number": number,
-        "is_prime": prime_check,
-        "is_perfect": perfect_check,
+    # Get the fun fact for the number
+    fun_fact = get_fun_fact(num)
+
+    # Calculate the sum of digits of the number
+    digit_sum = sum(int(digit) for digit in str(abs(num)))
+
+    return {
+        "number": num,
+        "is_prime": prime,
+        "is_perfect": perfect,
         "properties": properties,
-        "digit_sum": sum(int(digit) for digit in str((number if number > 0 else -number))),
+        "digit_sum": digit_sum,
         "fun_fact": fun_fact
     }
-
-    return JSONResponse(content=response_data)
