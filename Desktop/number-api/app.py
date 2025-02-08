@@ -4,7 +4,7 @@ import requests
 
 app = FastAPI()
 
-# Enable CORS for all origins
+# Enable CORS for all origins, allow all origins (*), making your API accessible from any domain.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], 
@@ -13,7 +13,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Helper function to check if a number is prime
+# Helper function to check if a number is prime by dividing it by all numbers up to the square root of the number.
 def is_prime(num: int) -> bool:
     if num < 2:
         return False
@@ -22,16 +22,16 @@ def is_prime(num: int) -> bool:
             return False
     return True
 
-# Helper function to check if a number is perfect
+"""Helper function to check if a number is perfect. A perfect number is a number that equals the sum of its proper divisors (excluding itself).This function sums the divisors and compares the sum to the original number."""
 def is_perfect(num: int) -> bool:
-    if num <= 0:
+    if num <= 0: 
         return False
     divisors_sum = sum(i for i in range(1, num) if num % i == 0)
     return divisors_sum == num
 
-# Helper function to check if a number is Armstrong
+# Helper function to check if a number is Armstrong: a number equal to the sum of its own digits raised to the power of the number of digits.
 def is_armstrong(num: int) -> bool:
-    num_str = str(abs(num))  # Ensure positive number for calculation
+    num_str = str(abs(num))  # Ensure only positive number for calculation
     power = len(num_str)
     return num == sum(int(digit) ** power for digit in num_str)
 
@@ -50,7 +50,12 @@ async def classify(number: str):
         # Convert string to integer
         num = int(number)
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid number format")
+        raise HTTPException(
+            status_code=400,
+            content={
+                "number": "alphabet",
+                "error": True
+            })
 
     # Initialize properties
     properties = []
