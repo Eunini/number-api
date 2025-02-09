@@ -48,8 +48,8 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 `requirements.txt` includes:
-- Flask
-- Flask-CORS
+- Uvicorn
+- fastAPI
 - Requests
 
 If you don't have a `requirements.txt` file, you can generate it by running:
@@ -63,11 +63,11 @@ You can set the PORT environment variable for deployment purposes or leave it as
 ## Running the API Locally
 To run the API locally, execute the following command:
 ```bash
-python app.py
+uvicorn app:app --reload
 ```
 By default, the API will be accessible at:
 ```bash
-http://127.0.0.1:5000
+http://127.0.0.1:8000
 ```
 
 ## API Endpoints
@@ -115,7 +115,7 @@ If the number is not provided or if the input is not a valid integer:
 
 ### Check for Armstrong number, Prime, Perfect, and Parity (Odd/Even)
 ```bash
-curl "http://127.0.0.1:5000/api/classify-number?number=371"
+curl "http://127.0.0.1:8000/api/classify-number?number=371"
 ```
 Response:
 ```json
@@ -131,7 +131,7 @@ Response:
 
 ### Invalid Input
 ```bash
-curl "http://127.0.0.1:5000/api/classify-number?number=abc"
+curl "http://127.0.0.1:8000/api/classify-number?number=abc"
 ```
 Response:
 ```json
@@ -144,6 +144,7 @@ Response:
 ## Deployment
 You can deploy this API to any platform of your choice that supports Python, such as:
 - Heroku
+- Ngrok(Temporary Server)
 - Render
 - AWS (EC2 or Lambda)
 - Google Cloud Platform (App Engine)
@@ -158,7 +159,7 @@ pip freeze > requirements.txt
 
 ### Deployment Example on Render:
 1. Create a new Web Service on Render, linking your repository.
-2. Choose the Python environment and specify `python app.py` as the start command.
+2. Choose the Python environment and specify `uvicorn app:app --reload` as the start command.
 3. Your API will be available via the URL provided by Render.
 
 ## License
