@@ -10,9 +10,11 @@ This API provides mathematical properties of a number, including whether the num
 - Fetches a **fun fact** about the number from the Numbers API.
 
 ## Technologies
-- **Python** (Flask Framework)
-- **Flask-CORS** for handling Cross-Origin Requests
+## Technologies
+- **Python** (FastAPI Framework)
+- **Uvicorn** for ASGI server
 - **Requests** for fetching data from the Numbers API
+- **Pydantic** for data validation
 - **JSON** for the response format
 
 ## Installation
